@@ -1,0 +1,54 @@
+name: Moodle Plugin CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ created ]
+
+jobs:
+  check-php:
+    name: PHP Lint & Moodle Coding Style Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+
+      - name: PHP Syntax Check
+        run: |
+          php -l moodle.php
+
+      - name: Moodle Coding Standards Check
+        run: |
+          git clone https://github.com/moodlehq/moodle-local_codechecker.git
+          git clone https://github.com/squizlabs/PHP_CodeSniffer.git moodle-local_codechecker/PHP_CodeSniffer
+          php moodle-local_codechecker/PHP_CodeSniffer/bin/phpcs --config-set installed_paths moodle-local_codechecker
+          php moodle-local_codechecker/PHP_CodeSniffer/bin/phpcs -i
+          php moodle-local_codechecker/PHP_CodeSniffer/bin/phpcs --standard=moodle --extensions=php moodle.php
+
+  package:
+    name: Zip moodle.php on Release
+    if: github.event_name == 'release'
+    needs: check-php
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Zip Plugin
+        run: |
+          zip moodle-plugin.zip moodle.php
+
+      - name: Upload Zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: moodle-plugin
+          path: moodle-plugin.zip
