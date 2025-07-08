@@ -65,7 +65,7 @@ class block_user_activity_graphs extends block_base
         // Prepare data for template
         $data = [
             'dailylogins' => $dailylogins,
-            'topcourses' => $topcourses,
+            'topcourse' => $topcourses,
             'enrolments' => $enrolments,
             'timerange' => $timerange,
             'showlogins' => $showlogins,
